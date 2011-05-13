@@ -1,0 +1,8 @@
+<p>Index</p>
+
+<h2>All Sites</h2>
+<ul>
+[% WHILE (site = site_rs.next) %]
+<li><a href='/site/[% site.id %]'>[% site.name %]</a></li>
+[% END %]
+</ul>

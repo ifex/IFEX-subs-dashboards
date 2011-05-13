@@ -1,0 +1,36 @@
+[% IF site %]
+
+<style type="text/css" media="screen">@import "/css/menu.css";</style>
+
+<h2>Subcriber Dashboard for [% site.name %]</h2>
+
+<div id='tabnav'>
+<ul>
+<li><a href='/site/[% site.id %]'[% UNLESS list %] class="here"[% END %]>List Overview</a></li>
+[% IF list %]
+<li><a href='/campaigns/[% list.id %]'[% IF c.req.path.match('campaigns/' _ list.id) %] class="here"[% END %]>Campaigns</a></li>
+<li><a href='/list/[% list.id %]'[% IF c.req.path.match('list/' _ list.id) %] class="here"[% END %]>[% list.name %]</a></li>
+[% END %]
+[% IF lists.size %]
+<li>
+    <select onchange='javascript:JumpList(this.options[this.options.selectedIndex].value)'>
+    <option value='0'>Please Choose ...</option>
+    [% FOREACH li IN lists %]
+    <option value='[% li.id %]'[% IF list AND list.id == li.id %] selected='selected'[% END %]>[% li.name %]</option>
+    [% END %]
+    </select>
+</li>
+[% END %]
+</ul>
+</div>
+
+<script>
+    function JumpList(lid) {
+        if (lid > 0) {
+            location.href = '/[% IF is_in_campaign %]campaigns[% ELSE %]list[% END %]/' + lid;
+        } else {
+            location.href = '/site/[% site.id %]';
+        }
+    }
+</script>
+[% END %]

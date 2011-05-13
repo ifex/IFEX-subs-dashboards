@@ -1,0 +1,138 @@
+[%  tmlist = this_month.split('-0?'); this_y = tmlist.0; this_m = tmlist.1;
+    tmp_this_m = this_m - 1;
+    this_month_abbr = month_abbr.$tmp_this_m;
+%]
+[% USE Math %]
+
+<div id="content">
+
+<style>
+    ul { padding: 0px; margin: 0; }
+    li { margin-left: 0; list-style: none; }
+    .thintable { width:100%; border:1px solid #000000; margin:10px; border-collapse:collapse; }
+    .thintable td, .thintable th { border:1px solid #000000; padding: 2px; padding-left: 5px }
+</style>
+
+<table border='0' width='100%'>
+<tr><td id='left' width='75%'>
+
+    [% IF list %]
+    <h2>Details of [% list.name %] for [% this_month_abbr %], [% this_y %]</h2>
+    [% ELSE %]
+    <h2>Overview of all lists for [% this_month_abbr %], [% this_y %]</h2>
+    [% END %]
+</td><td id='right' width='25%'>
+    <form action='/[% c.req.path %]' method='get'>
+    <select name='month'>
+        [% FOREACH mmm IN all_months %]
+        <option value='[% mmm.value %]'[% IF mmm.value == this_month %] selected='selected'[% END %]>[% mmm.label %]</option>
+        [% END %]
+    </select>
+    <input type='submit' value='Go' />
+    </form>
+<td></tr>
+<tr><td id='left'>
+    <table border='0' width='100%'>
+    <tr>
+        <td>
+        [% max_value = this_month_num;
+           IF last_month_num > max_value; max_value = last_month_num; END; %]
+        <img src='http://chart.apis.google.com/chart?cht=bvg&chbh=a&chs=300x200&chco=4D89F9|C6D9FD&chdl=[% last_month %]|[% this_month %]&chtt=Subscription+growth&chxr=0,0,[% max_value + 3 %]&chxt=y&chd=t:[% last_month_num %],[% this_month_num %]&chds=0,[% max_value + 3 %]&chbh=r,0.5,1.5&chma=30,30,30,30&chm=N,808080,0,-1,11' />
+        </td>
+        <td>
+        [% max_value = this_month_lose_num;
+           IF last_month_lose_num > max_value; max_value = last_month_lose_num; END; %]
+        <img src='http://chart.apis.google.com/chart?cht=bvg&chbh=a&chs=300x200&chco=4D89F9|C6D9FD&chdl=[% last_month %]|[% this_month %]&chtt=Subscription+loss&chxr=0,0,[% max_value + 3 %]&chxt=y&chd=t:[% last_month_lose_num %],[% this_month_lose_num %]&chds=0,[% max_value + 3 %]&chbh=r,0.5,1.5&chma=30,30,30,30&chm=N,808080,0,-1,11' />
+        </td>
+        <td><img src='[% gain_lose_chart %]&chbh=a' /></td>
+    </tr>
+    <tr>
+        <td><img src='[% country_chart %]' /></td>
+        <td><img src='[% occupation_chart %]' /></td>
+        <td><img src='[% source_chart %]' /></td>
+    </tr>
+    </table>
+</td><td id='right'>
+
+<ul>
+    <li>Total Subscribers: [% total %]</li>
+    <li>New Subscribers: [% this_month_num %]</li>
+    <li>Lost Subscribers: [% this_month_lose_num %]</li>
+    <li>Net gain/lose: [% this_month_num - this_month_lose_num %]</li>
+    <li>Last month: [% last_month_num %]</li>
+    <li>Last month lose: [% last_month_lose_num %]</li>
+</ul>
+<p><hr /></p>
+<b>Current Month:</b>
+<ul>
+    <li>Top Country: [% this_countries.nsort.reverse.grep('\w').0 || 'Undefined' %]</li>
+    <li>Top Source: [% this_source.nsort.reverse.grep('\w').0 || 'Undefined' %]</li>
+    <li>Top Occupation: [% this_occupation.nsort.reverse.grep('\w').0 || 'Undefined' %]</li>
+</ul>
+
+<br /><b>Previous Month:</b>
+<ul>
+    <li>Top Country: [% last_countries.nsort.reverse.grep('\w').0 || 'Undefined' %]</li>
+    <li>Top Source: [% last_source.nsort.reverse.grep('\w').0 || 'Undefined' %]</li>
+    <li>Top Occupation: [% last_occupation.nsort.reverse.grep('\w').0 || 'Undefined' %]</li>
+</ul>
+
+</td></tr>
+
+<tr><td id='left'>
+
+<h3>Details for [% this_month_abbr %], [% this_y %]</h3>
+
+[%  this_total = 0;
+    FOREACH one IN this_source.nsort.reverse;
+        this_total = this_total + this_source.$one;
+    END; %]
+<table class='thintable'>
+    <tr><th width='40%'>Source</th><th width='20%'>No. Subscribers</th><th width='20%'>Percentage</th><th width='20%'>Change vs last month</th></tr>
+    [% FOREACH one IN this_source.nsort.reverse %]
+    <tr>
+        <td>[% one || 'Undefined' %]</td>
+        <td>[% this_source.$one %]</td>
+        <td>[% Math.int( 100 * this_source.$one / this_total ) %]%</td>
+        <td>[% Math.int( 100 * (this_source.$one - last_source.$one) / this_total ) %]%</td>
+    </tr>
+    [% END %]
+</table>
+
+[%  this_total = 0;
+    FOREACH one IN this_occupation.nsort.reverse;
+        this_total = this_total + this_occupation.$one;
+    END; %]
+<table class='thintable'>
+    <tr><th width='40%'>Type</th><th width='20%'>No. Subscribers</th><th width='20%'>Percentage</th><th width='20%'>Change vs last month</th></tr>
+    [% FOREACH one IN this_occupation.nsort.reverse %]
+    <tr>
+        <td>[% one || 'Undefined' %]</td>
+        <td>[% this_occupation.$one %]</td>
+        <td>[% Math.int( 100 * this_occupation.$one / this_total ) %]%</td>
+        <td>[% Math.int( 100 * (this_occupation.$one - last_occupation.$one) / this_total ) %]%</td>
+    </tr>
+    [% END %]
+</table>
+
+[%  this_total = 0;
+    FOREACH one IN this_countries.nsort.reverse;
+        this_total = this_total + this_countries.$one;
+    END; %]
+<table class='thintable'>
+    <tr><th width='40%'>Country</th><th width='20%'>No. Subscribers</th><th width='20%'>Percentage</th><th width='20%'>Change vs last month</th></tr>
+    [% FOREACH one IN this_countries.nsort.reverse %]
+    <tr>
+        <td>[% one || 'Undefined' %]</td>
+        <td>[% this_countries.$one %]</td>
+        <td>[% Math.int( 100 * this_countries.$one / this_total ) %]%</td>
+        <td>[% Math.int( 100 * (this_countries.$one - last_countries.$one) / this_total ) %]%</td>
+    </tr>
+    [% END %]
+</table>
+
+</td><td id='right'> &nbsp; </td>
+</tr>
+</table>
+
+</div>

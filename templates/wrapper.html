@@ -1,0 +1,9 @@
+[% IF no_wrapper;
+    content;
+   ELSE;
+    PROCESS header.html;
+    PROCESS menu.html;
+    content;
+    PROCESS footer.html;
+   END;
+%]

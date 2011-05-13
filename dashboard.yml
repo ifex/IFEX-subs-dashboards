@@ -1,0 +1,25 @@
+--- 
+name: Dashboard
+# Disable deprecated behavior needed by old applications
+disable_component_resolution_regex_fallback: 1
+
+Model::DBIC:
+  schema_class: Subscriber::Schema
+  connect_info:
+    - "dbi:mysql:dashboard"
+    - dashboard
+    - dashboard
+    - AutoCommit: 1
+
+View::TT:
+  INCLUDE_PATH:
+    - __path_to(templates)__
+  EVAL_PERL: 0
+  TEMPLATE_EXTENSION: '.html'
+  render_die: 1
+  WRAPPER: 'wrapper.html'
+  
+source:
+  mailout:
+    user: 'ifex01ws'
+    pass: 'kkdh75sh'

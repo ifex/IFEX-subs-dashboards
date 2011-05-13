@@ -1,0 +1,132 @@
+[% USE Math %]
+
+[%  tmlist = this_month.split('-0?'); this_y = tmlist.0; this_m = tmlist.1;
+    tmp_this_m = this_m - 1;
+    this_month_abbr = month_abbr.$tmp_this_m;
+%]
+
+<div id="content">
+
+<style>
+    ul { padding: 0px; margin: 0; }
+    li { margin-left: 0; list-style: none; }
+    .thintable { width:100%; border:1px solid #000000; margin:10px; border-collapse:collapse; }
+    .thintable td, .thintable th { border:1px solid #000000; padding: 2px; padding-left: 5px }
+</style>
+
+<table border='0' width='100%'>
+<tr><td id='left' width='75%'>
+<h2>Campaigns of [% list.name %] for [% this_month_abbr %], [% this_y %]</h2>
+</td><td id='right' width='25%'>
+    <form action='/[% c.req.path %]' method='get'>
+    <select name='month'>
+        [% FOREACH mmm IN all_months %]
+        <option value='[% mmm.value %]'[% IF mmm.value == this_month %] selected='selected'[% END %]>[% mmm.label %]</option>
+        [% END %]
+    </select>
+    <input type='submit' value='Go' />
+    </form>
+<td></tr>
+<tr><td id='left'>
+
+[% # avg, best
+    open_avg = 0; open_best = 0; open_total = 0;
+    click_avg = 0; click_best = 0; click_total = 0;
+%]
+[%
+    all_open_vals = []; max_open_val = 0; all_open_labels = [];
+    all_click_vals = []; max_click_val = 0; all_click_labels = [];
+%]
+[%  FOREACH op IN open;
+        all_open_vals.push(op.num);
+        rate = Math.int(100 * op.num / op.total);
+        label = campaigns.${op.campaign_id}.name _ ' (' _ rate _ '%)';
+        label = label.replace('\|', '-');
+        label = label | uri;
+        label = label.replace("'", '%27');
+        all_open_labels.push(label);
+        open_total = open_total + rate;
+        IF rate > open_best; open_best = rate; max_open_val = op.num; END;
+    END;
+    IF open.size;
+        open_avg = Math.int(open_total / open.size);
+    END;
+%]
+[%  FOREACH cl IN click;
+        all_click_vals.push(cl.num);
+        rate = Math.int(100 * cl.num / cl.total);
+        label = campaigns.${cl.campaign_id}.name _ ' (' _ rate _ '%)';
+        label = label.replace('\|', '-');
+        label = label | uri;
+        label = label.replace("'", '%27');
+        all_click_labels.push(label);
+        click_total = click_total + rate;
+        IF rate > click_best; click_best = rate; max_click_val = cl.num; END;
+    END;
+    IF click.size;
+        click_avg = Math.int(click_total / click.size);
+    END;
+%]
+
+<div style="clear: both">
+<img src='http://chart.apis.google.com/chart?cht=bvg&chbh=a&chs=800x300&chco=[% open_colors.join('%7C') %]&chdl=[% all_open_labels.join('%7C') %]&chma=30,30,30,30&chts=000000,12&chtt=Open+rate+for+campaigns+in+[% this_month %]&chxr=0,0,[% Math.int(max_open_val * 1.1) %]&chxt=y&chd=t:[% all_open_vals.join(',') %]&chds=0,[% Math.int(max_open_val * 1.1) %]&chbh=r,0.5,1.5&chm=N,808080,0,-1,11' />
+</div>
+
+<div style="clear: both">
+<img src='http://chart.apis.google.com/chart?cht=bvg&chbh=a&chs=800x300&chco=[% click_colors.join('%7C') %]&chdl=[% all_click_labels.join('%7C') %]&chma=30,30,30,30&chts=000000,12&chtt=Click+rate+for+campaigns+in+[% this_month %]&chxr=0,0,[% Math.int(max_click_val * 1.1) %]&chxt=y&chd=t:[% all_click_vals.join(',') %]&chds=0,[% Math.int(max_click_val * 1.1) %]&chbh=r,0.5,1.5&chm=N,808080,0,-1,11' />
+</div>
+
+<div style="clear: both">
+<img src='[% openclick_last6month %]&chbh=a' />
+</div>
+
+</td><td id='right' valign='top'>
+
+<ul>
+    <li>Avg Open Rate: [% open_avg %]%</li>
+    <li>Best Open Rate: [% open_best %]%</li>
+    <li>Avg Click Rate: [% click_avg %]%</li>
+    <li>Best Click Rate: [% click_best %]%</li>
+</ul>
+
+</td>
+</tr>
+
+[% IF open.size OR click.size %]
+<tr><td id='left'>
+
+<h3>Details for [% this_month_abbr %], [% this_y %]</h3>
+
+[% # FOR nsort;
+    FOREACH op IN open;
+        rate = Math.int(100 * op.num / op.total);
+        nsortcampaigns.${op.campaign_id} = rate;
+        campaigns.${op.campaign_id}.open = op;
+    END;
+    FOREACH cl IN click;
+        rate = Math.int(100 * cl.num / cl.total);
+        clickrate.${cl.campaign_id} = rate;
+    END;
+%]
+
+<table class='thintable'>
+    <tr><th>Campaign ID</th><th>Date</th><th width='*'>Subject Line</th><th>Open %</th><th>Click %</th><th>Total recipients</th></tr>
+    [% FOREACH campaign_id IN nsortcampaigns.nsort.reverse %]
+    <tr>
+        <td>[% campaigns.${campaign_id}.remote_id %]</td>
+        <td>[% campaigns.${campaign_id}.created %]</td>
+        <td>[% campaigns.${campaign_id}.name %]</td>
+        <td>[% nsortcampaigns.${campaign_id} %]%</td>
+        <td>[% clickrate.${campaign_id} || 0 %]%</td>
+        <td>[% campaigns.${campaign_id}.total_recipients %]</td>
+    </tr>
+    [% END %]
+</table>
+
+</td><td id='right'> &nbsp; </td>
+</tr>
+[% END %]
+
+</table>
+
+</div>

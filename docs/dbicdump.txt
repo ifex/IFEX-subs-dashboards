@@ -1,0 +1,6 @@
+  dbicdump -o dump_directory=./lib \
+           -o debug=1 \
+           Subscriber::Schema \
+           'dbi:mysql:dbname=dashboard' \
+           dashboard \
+           dashboard
